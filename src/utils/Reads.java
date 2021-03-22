@@ -9,6 +9,7 @@ import main.ArrayVisualizer;
 MIT License
 
 Copyright (c) 2019 w0rthy
+Copyright (c) 2021 ArrayV 4.0 Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -53,14 +54,24 @@ final public class Reads {
         this.formatter = ArrayVisualizer.getNumberFormat();
     }
 
+    /**
+     * Reset all the Reads statistics
+     */
     public void resetStatistics() {
         this.comparisons = 0;
     }
 
+    /**
+     * Count a comparison
+     */
     public void addComparison() {
         this.comparisons++;
     }
 
+    /**
+     * Return the comparisons in a nicely formatted string
+     * @return The nicely formatted string
+     */
     public String getStats() {
         if(this.comparisons < 0) {
             this.comparisons = Long.MIN_VALUE;
@@ -72,14 +83,30 @@ final public class Reads {
         }
     }
 
+    /**
+     * Returns the number of counted comparisons
+     * @return The number of comparisons this sort so far
+     */
     public long getComparisons() {
         return this.comparisons;
     }
 
+    /**
+     * Sets the number of comparisons made by this sort
+     * @param value The number of comparisons
+     */
     public void setComparisons(long value) {
         this.comparisons = value;
     }
 
+    /**
+     * Compare left to right (may be biased based on stability check and AntiQSort)
+     * @param left The left number
+     * @param right The right number
+     * @return -1 if left < right, 0 if left == right, or 1 if left > right
+     * @see Reads#compareOriginalValues(int, int) compareOriginalValues
+     * @see Reads#compareIndices(int[], int, int, double, boolean) compareIndices
+     */
     public int compareValues(int left, int right) {
         if (ArrayVisualizer.sortCanceled()) throw new StopSort();
         this.comparisons++;
@@ -107,6 +134,14 @@ final public class Reads {
         }
     }
 
+    /**
+     * Compare left to right (these values should <i>not</i> be from the original array)
+     * @param left The left number
+     * @param right The right number
+     * @return -1 if left < right, 0 if left == right, or 1 if left > right
+     * @see Reads#compareValues(int, int) compareValues
+     * @see Reads#compareOriginalIndices(int[], int, int, double, boolean) compareOriginalIndices
+     */
     public int compareOriginalValues(int left, int right) {
         if (ArrayVisualizer.sortCanceled()) throw new StopSort();
         this.comparisons++;
@@ -124,6 +159,19 @@ final public class Reads {
         return cmpVal;
     }
 
+    /**
+     * Compare array[left] to array[right] (may be biased based on stability check and AntiQSort)
+     * @param array The array to compare values from
+     * @param left The left index in the array
+     * @param right The right index in the array
+     * @param sleep The amount of milliseconds to pause during the comparison
+     * @param mark Whether the indices should be highlighted
+     * @return -1 if array[left] < array[right], 0 if array[left] == array[right], or 1 if array[left] > array[right]
+     * @see Reads#compareOriginalIndices(int[], int, int, double, boolean) compareOriginalIndices
+     * @see Reads#compareValues(int, int) compareValues
+     * @see Delays#sleep(double)
+     * @see Highlights#markArray(int, int)
+     */
     public int compareIndices(int[] array, int left, int right, double sleep, boolean mark) {
         if(mark) {
             Highlights.markArray(1, left);
@@ -133,6 +181,19 @@ final public class Reads {
         return this.compareValues(array[left], array[right]);
     }
 
+    /**
+     * Compare array[left] to array[right] (these values should <i>not</i> be from the original array)
+     * @param array The array to compare values from
+     * @param left The left index in the array
+     * @param right The right index in the array
+     * @param sleep The amount of milliseconds to pause during the comparison
+     * @param mark Whether the indices should be highlighted
+     * @return -1 if array[left] < array[right], 0 if array[left] == array[right], or 1 if array[left] > array[right]
+     * @see Reads#compareIndices(int[], int, int, double, boolean) compareIndices
+     * @see Reads#compareOriginalValues(int, int) compareOriginalValues
+     * @see Delays#sleep(double)
+     * @see Highlights#markArray(int, int)
+     */
     public int compareOriginalIndices(int[] array, int left, int right, double sleep, boolean mark) {
         if(mark) {
             Highlights.markArray(1, left);
@@ -142,6 +203,16 @@ final public class Reads {
         return this.compareOriginalValues(array[left], array[right]);
     }
 
+    /**
+     * Find the highest value in the array
+     * @param array The array to find the highest value of
+     * @param length The length of the array
+     * @param sleep The amount of milliseconds to pause for each element in the array
+     * @param mark Whether it should highlight its progress (in blue)
+     * @return The highest value in the array
+     * @see Reads#analyzeMin(int[], int, double, boolean) analyzeMin
+     * @see ArrayVisualizer#toggleAnalysis(boolean)
+     */
     public int analyzeMax(int[] array, int length, double sleep, boolean mark) {
         ArrayVisualizer.toggleAnalysis(true);
         ArrayVisualizer.updateNow();
@@ -173,6 +244,16 @@ final public class Reads {
         return max;
     }
 
+    /**
+     * Find the lowest value in the array
+     * @param array The array to find the lowest value of
+     * @param length The length of the array
+     * @param sleep The amount of milliseconds to pause for each element in the array
+     * @param mark Whether it should highlight its progress (in blue)
+     * @return The lowest value in the array
+     * @see Reads#analyzeMax(int[], int, double, boolean) analyzeMax
+     * @see ArrayVisualizer#toggleAnalysis(boolean)
+     */
     public int analyzeMin(int[] array, int length, double sleep, boolean mark) {
         ArrayVisualizer.toggleAnalysis(true);
         ArrayVisualizer.updateNow();
@@ -204,6 +285,18 @@ final public class Reads {
         return max;
     }
 
+    /**
+     * Find the highest logarithm of the specified base in the array
+     * @param array The array to find the highest logarithm of the specified base of
+     * @param length The length of the array
+     * @param base The base to use
+     * @param sleep The amount of milliseconds to pause for each element in the array
+     * @param mark Whether it should highlight its progress (in blue)
+     * @return The highest logarithm of the specified base in the array
+     * @apiNote The logarithm will be truncated/floored (if you want to ceiling instead, use {@link Reads#analyzeMaxCeilingLog(int[], int, int, double, boolean) analyzeMaxCeilingLog})
+     * @see Reads#analyzeMaxCeilingLog(int[], int, double, boolean) analyzeMaxCeilingLog
+     * @see ArrayVisualizer#toggleAnalysis(boolean)
+     */
     public int analyzeMaxLog(int[] array, int length, int base, double sleep, boolean mark) {
         ArrayVisualizer.toggleAnalysis(true);
         ArrayVisualizer.updateNow();
@@ -237,6 +330,18 @@ final public class Reads {
         return max;
     }
 
+    /**
+     * Find the highest logarithm of the specified base in the array
+     * @param array The array to find the highest logarithm of the specified base of
+     * @param length The length of the array
+     * @param base The base to use
+     * @param sleep The amount of milliseconds to pause for each element in the array
+     * @param mark Whether it should highlight its progress (in blue)
+     * @return The highest logarithm of the specified base in the array
+     * @apiNote The logarithm will be ceilinged (if you want to truncate/floor instead, use {@link Reads#analyzeMaxLog(int[], int, int, double, boolean) analyzeMaxLog})
+     * @see Reads#analyzeMaxLog(int[], int, double, boolean) analyzeMaxLog
+     * @see ArrayVisualizer#toggleAnalysis(boolean)
+     */
     public int analyzeMaxCeilingLog(int[] array, int length, int base, double sleep, boolean mark) {
         ArrayVisualizer.toggleAnalysis(true);
         ArrayVisualizer.updateNow();
@@ -270,6 +375,16 @@ final public class Reads {
         return max;
     }
 
+    /**
+     * Find the highest bit in the array
+     * @param array The array to find the highest bit of
+     * @param length The length of the array
+     * @param sleep The amount of milliseconds to pause for each element in the array
+     * @param mark Whether it should highlight its progress (in blue)
+     * @return The highest bit in the array
+     * @see Reads#analyzeMaxLog(int[], int, double, boolean)
+     * @see ArrayVisualizer#toggleAnalysis(boolean)
+     */
     public int analyzeBit(int[] array, int length) {
         ArrayVisualizer.toggleAnalysis(true);
         ArrayVisualizer.updateNow();
@@ -307,6 +422,14 @@ final public class Reads {
         return analysis;
     }
 
+    /**
+     * Get the specified digit in the number using the specified base
+     * @param a The number to get a digit of
+     * @param power The digit index (0 is the rightmost digit)
+     * @param radix The base to use (2 is binary, 8 is octal, 10 is decimal, 16 is hexadecimal, etc.)
+     * @return The digit in the number (as an int)
+     * @see Reads#getBit(int, int) getBit
+     */
     public int getDigit(int a, int power, int radix) {
 		if(ArrayVisualizer.doingStabilityCheck())
 			a = ArrayVisualizer.getStabilityValue(a);
@@ -318,6 +441,13 @@ final public class Reads {
         return digit;
     }
 
+    /**
+     * Get the specified bit of the number as a boolean
+     * @param n The number to get the bit of
+     * @param k The index (0 is rightmost) of the bit
+     * @return The bit as a boolean
+     * @see Reads#getDigit(int, int, int) getDigit
+     */
     public boolean getBit(int n, int k) {
 		if(ArrayVisualizer.doingStabilityCheck())
 			n = ArrayVisualizer.getStabilityValue(n);
