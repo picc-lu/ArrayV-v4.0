@@ -12,6 +12,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.rmi.CORBA.Util;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -66,19 +67,19 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
          */
         private static final long serialVersionUID = 1L;
         private String placeholder;
-    
+
         public String getPlaceholder() {
             return placeholder;
         }
-    
+
         @Override
         protected void paintComponent(final Graphics pG) {
             super.paintComponent(pG);
-    
+
             if (placeholder == null || placeholder.length() == 0 || getText().length() > 0) {
                 return;
             }
-    
+
             final Graphics2D g = (Graphics2D) pG;
             g.setRenderingHint(
                 RenderingHints.KEY_ANTIALIASING,
@@ -87,7 +88,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             g.drawString(placeholder, getInsets().left, pG.getFontMetrics()
                 .getMaxAscent() + getInsets().top);
         }
-    
+
         public void setPlaceholder(final String s) {
             placeholder = s;
         }
@@ -98,19 +99,19 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
     private static final long serialVersionUID = 1L;
 
     private Hashtable<String, MultipleSortThread> categorySortThreads;
-    
+
     private int[] array;
-    
+
     private ArrayVisualizer ArrayVisualizer;
     private JFrame Frame;
     private UtilFrame UtilFrame;
-    
+
     public SortPrompt(int[] array, ArrayVisualizer arrayVisualizer, JFrame frame, UtilFrame utilFrame) {
         this.array = array;
         this.ArrayVisualizer = arrayVisualizer;
         this.Frame = frame;
         this.UtilFrame = utilFrame;
-        
+
         setAlwaysOnTop(true);
         setUndecorated(true);
         loadSortThreads();
@@ -169,9 +170,9 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
         jComboBox1.insertItemAt("All Sorts", 0);
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        
+
         jList1.setModel(new javax.swing.AbstractListModel() {
-            
+
             private static final long serialVersionUID = 1L;
 
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -220,7 +221,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
                 jButton1ActionPerformed();
             }
         });
-        
+
         jButton2.setText("Import Sort");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -228,7 +229,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
                 jButton2ActionPerformed();
             }
         });
-        
+
         jButton3.setText("Run All in Selected Category");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -336,6 +337,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         }
         final SortPair selection = sortNotFinal;
+        UtilFrame.setSelection(selection);
         new Thread(){
             @Override
             public void run() {
@@ -350,6 +352,8 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         }.start();
         UtilFrame.jButton1ResetText();
+        UtilFrame.jButton8SetSortName();
+        UtilFrame.jButton8Enabled();
         dispose();
     }//GEN-LAST:event_jList1ValueChanged
 
