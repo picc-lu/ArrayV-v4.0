@@ -85,6 +85,7 @@ final public class ArrayFrame extends javax.swing.JFrame {
         setLocation(Math.min((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth() - getWidth(), Frame.getX() + Frame.getWidth()), Frame.getY() + 29);
         setAlwaysOnTop(false);
         setVisible(true);
+        setOpacity(0.9F);
     }
 
     public void reposition(){

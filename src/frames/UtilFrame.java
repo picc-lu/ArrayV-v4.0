@@ -4,31 +4,26 @@
  */
 package frames;
 
-import java.awt.Toolkit;
-import java.util.Hashtable;
-import java.util.Random;
-
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import main.ArrayManager;
 import main.ArrayVisualizer;
+import main.SortAnalyzer;
 import panes.JEnhancedOptionPane;
 import panes.JErrorPane;
 import prompts.ShufflePrompt;
 import prompts.SortPrompt;
 import prompts.ViewPrompt;
-import utils.Delays;
-import utils.Highlights;
-import utils.SortingNetworkGenerator;
-import utils.Sounds;
+import threads.RunComparisonSort;
+import threads.RunDistributionSort;
 import utils.Timer;
+import utils.*;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Hashtable;
  
 /*
  * 
@@ -57,7 +52,6 @@ SOFTWARE.
  */
 
 /**
- *
  * @author S630690
  */
 final public class UtilFrame extends javax.swing.JFrame {
@@ -66,7 +60,7 @@ final public class UtilFrame extends javax.swing.JFrame {
     private boolean jCheckBox9WarningShown = true; //set to false to enable warning
 
     private int[] array;
-    
+
     private ArrayManager ArrayManager;
     private ArrayVisualizer ArrayVisualizer;
     private Delays Delays;
@@ -78,43 +72,43 @@ final public class UtilFrame extends javax.swing.JFrame {
 
     public UtilFrame(int[] array, ArrayVisualizer arrayVisualizer) {
         this.array = array;
-        
+
         this.ArrayVisualizer = arrayVisualizer;
         this.ArrayManager = ArrayVisualizer.getArrayManager();
-        
+
         this.Delays = ArrayVisualizer.getDelays();
         this.Frame = ArrayVisualizer.getMainWindow();
         this.Highlights = ArrayVisualizer.getHighlights();
         this.RealTimer = ArrayVisualizer.getTimer();
         this.Sounds = ArrayVisualizer.getSounds();
-        
+
         setUndecorated(true);
         initComponents();
         setLocation(Math.min((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth() - getWidth(), Frame.getX() + Frame.getWidth()), Frame.getY() + 29);
         setAlwaysOnTop(false);
         setVisible(true);
+        setOpacity(0.9F);
     }
 
     private int getCustomInput(String text, String defaultOptionMessage) throws Exception {
-        String input = JEnhancedOptionPane.showInputDialog("Customize Sort", text, new Object[] {"Enter", defaultOptionMessage});
+        String input = JEnhancedOptionPane.showInputDialog("Customize Sort", text, new Object[]{"Enter", defaultOptionMessage});
         int integer = Integer.parseInt(input);
         return Math.abs(integer);
     }
 
-    public void reposition(ArrayFrame af){
+    public void reposition(ArrayFrame af) {
         toFront();
         setLocation(Math.min((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth() - getWidth(), Frame.getX() + Frame.getWidth() + af.getWidth()), Frame.getY() + 29);
-        if(this.abstractFrame != null && abstractFrame.isVisible())
+        if (this.abstractFrame != null && abstractFrame.isVisible())
             abstractFrame.reposition();
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             JErrorPane.invokeErrorMessage(e);
         }
 
@@ -126,6 +120,7 @@ final public class UtilFrame extends javax.swing.JFrame {
         this.jCheckBox2 = new javax.swing.JCheckBox();
         this.jButton4 = new javax.swing.JButton();
         this.jButton7 = new javax.swing.JButton();
+        this.jButton8 = new javax.swing.JButton();
         this.jCheckBox3 = new javax.swing.JCheckBox();
         this.jCheckBox4 = new javax.swing.JCheckBox();
         this.jButton5 = new javax.swing.JButton();
@@ -305,13 +300,13 @@ final public class UtilFrame extends javax.swing.JFrame {
             }
         });
 
-        jComboBox1.setModel(new DefaultComboBoxModel<>(new String[] {
-            "Sorting",
-            "AntiQSort",
-            "Stability Check",
-            "Sorting Networks",
-            "Reversed Sorting"
-            // "*Simple* Benchmarking"
+        jComboBox1.setModel(new DefaultComboBoxModel<>(new String[]{
+                "Sorting",
+                "AntiQSort",
+                "Stability Check",
+                "Sorting Networks",
+                "Reversed Sorting"
+                // "*Simple* Benchmarking"
         }));
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -402,11 +397,11 @@ final public class UtilFrame extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
         //CHANGE SORT
-        if(this.abstractFrame != null && abstractFrame.isVisible()){
+        if (this.abstractFrame != null && abstractFrame.isVisible()) {
             boolean tmp = this.abstractFrame instanceof SortPrompt;
             abstractFrame.dispose();
             jButton1ResetText();
-            if(tmp)
+            if (tmp)
                 return;
         }
         this.abstractFrame = new SortPrompt(this.array, this.ArrayVisualizer, this.Frame, this);
@@ -421,11 +416,11 @@ final public class UtilFrame extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed() {//GEN-FIRST:event_jButton2ActionPerformed
         //CHANGE VIEW
-        if(this.abstractFrame != null && abstractFrame.isVisible()){
+        if (this.abstractFrame != null && abstractFrame.isVisible()) {
             boolean tmp = this.abstractFrame instanceof ViewPrompt;
             jButton2ResetText();
             abstractFrame.dispose();
-            if(tmp)
+            if (tmp)
                 return;
         }
         this.abstractFrame = new ViewPrompt(this.ArrayVisualizer, this.Frame, this);
@@ -440,35 +435,31 @@ final public class UtilFrame extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed() {//GEN-FIRST:event_jButton3ActionPerformed
         boolean speedPromptAllowed;
-        
-        if(this.abstractFrame == null) {
+
+        if (this.abstractFrame == null) {
             speedPromptAllowed = true;
-        }
-        else if(!this.abstractFrame.isVisible()) {
+        } else if (!this.abstractFrame.isVisible()) {
             speedPromptAllowed = true;
-        }
-        else {
+        } else {
             speedPromptAllowed = false;
         }
-        
-        if(speedPromptAllowed) {
+
+        if (speedPromptAllowed) {
             boolean showPrompt = true;
-            while(showPrompt) {
+            while (showPrompt) {
                 try {
                     double oldRatio = Delays.getSleepRatio();
                     String userInput = JOptionPane.showInputDialog(null, "Modify the visual's speed below (Ex. 10 = Ten times faster)", oldRatio);
-                    if(userInput == null) {
+                    if (userInput == null) {
                         showPrompt = false;
-                    }
-                    else {
+                    } else {
                         double newRatio = Double.parseDouble(userInput);
-                        if(newRatio == 0) throw new Exception("Divide by zero");
+                        if (newRatio == 0) throw new Exception("Divide by zero");
                         Delays.setSleepRatio(newRatio);
                         Delays.updateCurrentDelay(oldRatio, Delays.getSleepRatio());
                         showPrompt = false;
                     }
-                }
-                catch(Exception e) {
+                } catch (Exception e) {
                     showPrompt = true;
                     JOptionPane.showMessageDialog(null, "Not a number! (" + e.getMessage() + ")", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -505,21 +496,20 @@ final public class UtilFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jCheckBox5ActionPerformed() {//GEN-FIRST:event_jButton4ActionPerformed
-        if(jCheckBox5.isSelected()) {
+        if (jCheckBox5.isSelected()) {
             Sounds.toggleSofterSounds(true);
-        }
-        else {
+        } else {
             Sounds.toggleSofterSounds(false);
         }
     }//GEN-LAST:event_jCheckBox5ActionPerformed
 
     private void jButton6ActionPerformed() {//GEN-FIRST:event_jButton2ActionPerformed
         //CHANGE SIZE
-        if(this.abstractFrame != null && abstractFrame.isVisible()){
+        if (this.abstractFrame != null && abstractFrame.isVisible()) {
             boolean tmp = this.abstractFrame instanceof ShufflePrompt;
             abstractFrame.dispose();
             jButton6ResetText();
-            if(tmp)
+            if (tmp)
                 return;
         }
         this.abstractFrame = new ShufflePrompt(this.ArrayManager, this.Frame, this);
@@ -547,13 +537,13 @@ final public class UtilFrame extends javax.swing.JFrame {
     private void jCheckBox9ActionPerformed() {//GEN-FIRST:event_jButton4ActionPerformed
         if (!jCheckBox9WarningShown && jCheckBox9.isSelected()) {
             if (JOptionPane.showConfirmDialog(
-                null,
-                "<html>This will cause some sorts have extreme strobing/flashing."
-                    + "<br><strong>It is highly recommended to NOT enable the \"" + jCheckBox9.getText() + "\" option if you may be at risk of seizures.</strong>"
-                    + "<br>Are you sure you wish to enable this option?</html>",
-                "Seizure Warning",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
+                    null,
+                    "<html>This will cause some sorts have extreme strobing/flashing."
+                            + "<br><strong>It is highly recommended to NOT enable the \"" + jCheckBox9.getText() + "\" option if you may be at risk of seizures.</strong>"
+                            + "<br>Are you sure you wish to enable this option?</html>",
+                    "Seizure Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
             ) == JOptionPane.NO_OPTION) {
                 jCheckBox9.setSelected(false);
                 return;
@@ -564,7 +554,7 @@ final public class UtilFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBox8ActionPerformed
 
     private void jComboBox1ActionPerformed() {//GEN-FIRST:event_jButton4ActionPerformed
-        switch ((String)jComboBox1.getSelectedItem()) {
+        switch ((String) jComboBox1.getSelectedItem()) {
             case "Sorting":
                 if (ArrayVisualizer.enableBenchmarking(false))
                     break;
@@ -575,7 +565,7 @@ final public class UtilFrame extends javax.swing.JFrame {
             case "AntiQSort":
                 if (ArrayVisualizer.enableBenchmarking(false))
                     break;
-                if(this.abstractFrame != null && abstractFrame.isVisible()){
+                if (this.abstractFrame != null && abstractFrame.isVisible()) {
                     abstractFrame.dispose();
                     jButton6ResetText();
                 }
@@ -599,7 +589,7 @@ final public class UtilFrame extends javax.swing.JFrame {
                     jComboBox1.setSelectedIndex(0); // Failure to find Python installation
                 if (ArrayVisualizer.getCurrentLength() > 256) {
                     JOptionPane.showMessageDialog(null, "Large sorting networks take too long and will not be generated. Array lengths less than or equal to 256 are recommended.",
-                        "Sorting Network Visualizer", JOptionPane.WARNING_MESSAGE);
+                            "Sorting Network Visualizer", JOptionPane.WARNING_MESSAGE);
                     ArrayVisualizer.getArrayFrame().setLengthSlider(256);
                 }
                 break;
