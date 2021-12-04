@@ -85,6 +85,10 @@ final public class Writes {
         }
     }
 
+    public long getSwapsLong() {
+        return this.swaps;
+    }
+
     public String getSwaps() {
         if(this.swaps < 0) {
             this.swaps = Long.MIN_VALUE;
@@ -116,6 +120,13 @@ final public class Writes {
             if(this.writes == 1) return this.writes + " Write to Main Array";
             else                 return this.formatter.format(this.writes) + " Writes to Main Array";
         }
+    }
+
+    public long getWritesLong() {
+        if (this.writes + this.auxWrites < 0) {
+            return Long.MAX_VALUE;
+        }
+        return this.writes + this.auxWrites;
     }
 
     public String getAllocAmount() {

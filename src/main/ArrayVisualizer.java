@@ -525,6 +525,8 @@ final public class ArrayVisualizer {
         this.mainRender.drawString(this.statSnapshot.getAuxWriteCount(),         xOffset, (int) (windowRatio * 300) + yOffset);
         this.mainRender.drawString(this.statSnapshot.getAuxAllocAmount(),        xOffset, (int) (windowRatio * 325) + yOffset);
         this.mainRender.drawString(this.statSnapshot.getSegments(),              xOffset, (int) (windowRatio * 355) + yOffset);
+        this.mainRender.drawString(this.statSnapshot.getReadWriteRatio(),        xOffset, (int) (windowRatio * 390) + yOffset);
+        this.mainRender.drawString(this.statSnapshot.getTotalCost(),             xOffset, (int) (windowRatio * 415) + yOffset);
     }
 
     private void drawAction(Color textColor, boolean dropShadow) {
