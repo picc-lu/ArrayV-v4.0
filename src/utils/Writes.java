@@ -162,6 +162,8 @@ final public class Writes {
 
     public void swap(int[] array, int a, int b, double pause, boolean mark, boolean auxwrite) {
         if (ArrayVisualizer.sortCanceled()) throw new StopSort();
+        ArrayVisualizer.setAction("SWAPPING...");
+        ArrayVisualizer.setDetailAction(auxwrite ? "SWAPPING ON AUXILIARY ARRAY..." : "");
         if (!auxwrite && a >= ArrayVisualizer.getCurrentLength()) {
             System.err.println("Warning: write to index " + a + ", which is out of bounds for the current length (" + ArrayVisualizer.getCurrentLength() + ")");
         }
@@ -199,16 +201,21 @@ final public class Writes {
         }
     }
 
-    public void reversal(int[] array, int start, int length, double sleep, boolean mark, boolean auxwrite) {
+    public void reversal(int[] array, int start, int end, double sleep, boolean mark, boolean auxwrite) {
+        if (start >= end) return;
+        ArrayVisualizer.setAction("REVERSING...");
+        ArrayVisualizer.setDetailAction(auxwrite ? "REVERSING ON AUXILIARY ARRAY..." : "");
         this.reversals++;
 
-        for(int i = start; i < start + ((length - start + 1) / 2); i++) {
-            this.swap(array, i, start + length - i, sleep, mark, auxwrite);
+        for (int i = start; i < start + ((end - start + 1) / 2); i++) {
+            this.swap(array, i, start + end - i, sleep, mark, auxwrite);
         }
     }
 
     public void write(int[] array, int at, int equals, double pause, boolean mark, boolean auxwrite) {
         if (ArrayVisualizer.sortCanceled()) throw new StopSort();
+        ArrayVisualizer.setAction("WRITING...");
+        ArrayVisualizer.setDetailAction(auxwrite ? "WRITING TO AUXILIARY ARRAY..." : "");
         if (!auxwrite && at >= ArrayVisualizer.getCurrentLength()) {
             System.err.println("Warning: write to index " + at + ", which is out of bounds for the current length (" + ArrayVisualizer.getCurrentLength() + ")");
         }
@@ -230,6 +237,8 @@ final public class Writes {
 
     public <T> void write(T[] array, int at, T equals, double pause, boolean mark) {
         if (ArrayVisualizer.sortCanceled()) throw new StopSort();
+        ArrayVisualizer.setAction("WRITING...");
+        ArrayVisualizer.setDetailAction("");
         if(mark) Highlights.markArray(1, at);
 
         auxWrites++;
@@ -365,6 +374,8 @@ final public class Writes {
      * @see System#arraycopy(Object, int, Object, int, int)
      */
     public void arraycopy(int[] src, int srcPos, int[] dest, int destPos, int length, double sleep, boolean mark, boolean aux) {
+        ArrayVisualizer.setAction("ARRAY COPYING...");
+        ArrayVisualizer.setDetailAction("");
         int start, end, dir;
         if (src != dest || destPos < srcPos) {
             start = 0;
