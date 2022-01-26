@@ -16,3 +16,6 @@ wmain
 waux
 auxlen
 segments
+
+rwratio
+tcost

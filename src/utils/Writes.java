@@ -192,6 +192,23 @@ final public class Writes {
         Delays.sleep(pause);
     }
 
+    public void cleverMultiSwap(int[] array, int pos, int to, double sleep, boolean mark, boolean auxwrite) {
+        int val = array[pos];
+        if (to - pos > 0) {
+            for (int i = pos; i < to; i++) {
+                this.write(array, i, array[i + 1], 0, mark, auxwrite);
+                Delays.sleep(sleep);
+            }
+            this.write(array, to, val, 0, mark, auxwrite);
+        } else {
+            for (int i = pos; i > to; i--) {
+                this.write(array, i, array[i - 1], 0, mark, auxwrite);
+                Delays.sleep(sleep);
+            }
+            this.write(array, to, val, 0, mark, auxwrite);
+        }
+    }
+
     public void multiSwap(int[] array, int pos, int to, double sleep, boolean mark, boolean auxwrite) {
         if (to - pos > 0) {
             for (int i = pos; i < to; i++) {

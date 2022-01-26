@@ -130,7 +130,9 @@ public final class ArrayVisualizer {
         MAIN_WRITE,
         AUX_WRITE,
         AUX_ALLOC,
-        SEGMENTS;
+        SEGMENTS,
+        READ_WRITE_RATIO,
+        TOTAL_COST;
 
         private static final Map<String, StatisticType> CONFIG_KEYS = Collections.unmodifiableMap(new HashMap<String, StatisticType>() {{
             put("",         LINE_BREAK);
@@ -147,6 +149,8 @@ public final class ArrayVisualizer {
             put("waux",     AUX_WRITE);
             put("auxlen",   AUX_ALLOC);
             put("segments", SEGMENTS);
+            put("rwratio",  READ_WRITE_RATIO);
+            put("tcost",    TOTAL_COST);
         }});
     }
 
@@ -475,7 +479,9 @@ public final class ArrayVisualizer {
                 StatisticType.MAIN_WRITE,
                 StatisticType.AUX_WRITE,
                 StatisticType.AUX_ALLOC,
-                StatisticType.SEGMENTS
+                StatisticType.SEGMENTS,
+                StatisticType.READ_WRITE_RATIO,
+                StatisticType.TOTAL_COST
             };
         } else {
             statsConfig = statsInfoList.toArray(new StatisticType[statsInfoList.size()]);
@@ -738,12 +744,33 @@ public final class ArrayVisualizer {
                 case SEGMENTS:
                     stat = statSnapshot.getSegments();
                     break;
+                case READ_WRITE_RATIO:
+                    stat = statSnapshot.getReadWriteRatio();
+                    break;
+                case TOTAL_COST:
+                    stat = statSnapshot.getTotalCost();
+                    break;
                 default:
                     stat = null; // Unreachable
             }
             mainRender.drawString(stat, xOffset, (int)(windowRatio * yPos) + yOffset);
             yPos += fontSelectionScale;
         }
+    }
+
+    private void drawAction(Color textColor, boolean dropShadow) {
+        int xOffset = 15;
+        int yOffset = 0;
+        if(dropShadow) {
+            xOffset += 3;
+            yOffset += 3;
+        }
+        double windowRatio = this.getWindowRatio();
+
+        this.mainRender.setColor(textColor);
+
+        this.mainRender.drawString(this.getAction(), xOffset, (int) (windowHeight() - (windowRatio * 40) + yOffset));
+        this.mainRender.drawString(this.getDetailAction(), xOffset, (int) (windowHeight() - (windowRatio * 18) + yOffset));
     }
 
     public void updateNow() {

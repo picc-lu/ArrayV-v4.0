@@ -17,9 +17,12 @@ import javax.swing.event.ChangeListener;
 
 import main.ArrayManager;
 import main.ArrayVisualizer;
+import main.SortAnalyzer;
 import prompts.ShufflePrompt;
 import prompts.SortPrompt;
 import prompts.ViewPrompt;
+import threads.RunComparisonSort;
+import threads.RunDistributionSort;
 import utils.Delays;
 import utils.Highlights;
 import utils.Sounds;
