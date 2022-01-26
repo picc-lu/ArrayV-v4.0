@@ -4,16 +4,25 @@
  */
 package frames;
 
+import java.awt.Toolkit;
+import java.util.Hashtable;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import main.ArrayManager;
 import main.ArrayVisualizer;
-import main.SortAnalyzer;
-import panes.JEnhancedOptionPane;
-import panes.JErrorPane;
 import prompts.ShufflePrompt;
 import prompts.SortPrompt;
 import prompts.ViewPrompt;
-import threads.RunComparisonSort;
-import threads.RunDistributionSort;
+import utils.Delays;
+import utils.Highlights;
+import utils.Sounds;
 import utils.Timer;
 import utils.*;
 
@@ -24,9 +33,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Hashtable;
- 
+
 /*
- * 
+ *
 MIT License
 
 Copyright (c) 2019 w0rthy
@@ -92,12 +101,6 @@ final public class UtilFrame extends javax.swing.JFrame {
         setOpacity(0.9F);
     }
 
-    private int getCustomInput(String text, String defaultOptionMessage) throws Exception {
-        String input = JEnhancedOptionPane.showInputDialog("Customize Sort", text, new Object[]{"Enter", defaultOptionMessage});
-        int integer = Integer.parseInt(input);
-        return Math.abs(integer);
-    }
-
     public void reposition(ArrayFrame af) {
         toFront();
         setLocation(Math.min((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth() - getWidth(), Frame.getX() + Frame.getWidth() + af.getWidth()), Frame.getY() + 29);
@@ -108,12 +111,6 @@ final public class UtilFrame extends javax.swing.JFrame {
     @SuppressWarnings({"rawtypes", "unchecked"})
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            JErrorPane.invokeErrorMessage(e);
-        }
-
         this.jLabel1 = new javax.swing.JLabel();
         this.jButton1 = new javax.swing.JButton();
         this.jButton2 = new javax.swing.JButton();
@@ -640,12 +637,13 @@ final public class UtilFrame extends javax.swing.JFrame {
                     break;
                 jButton6.setEnabled(true);
                 ArrayVisualizer.setComparator(4);
-                if (!SortingNetworkGenerator.verifyPythonVersionAndDialog())
-                    jComboBox1.setSelectedIndex(0); // Failure to find Python installation
-                if (ArrayVisualizer.getCurrentLength() > 256) {
-                    JOptionPane.showMessageDialog(null, "Large sorting networks take too long and will not be generated. Array lengths less than or equal to 256 are recommended.",
-                            "Sorting Network Visualizer", JOptionPane.WARNING_MESSAGE);
-                    ArrayVisualizer.getArrayFrame().setLengthSlider(256);
+                if (ArrayVisualizer.getCurrentLength() > 1024) {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Large sorting networks can take a long time (and high RAM usage) to visualize.\n" +
+                            "A length of 1024 or less is recommended.",
+                        "Sorting Network Visualizer", JOptionPane.WARNING_MESSAGE
+                    );
                 }
                 break;
 

@@ -5,12 +5,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -21,7 +21,7 @@ public class ShufflePanel extends JPanel implements KeyListener {
     int camX = 0, camY = 0;
     int prevX = 0, prevY = 0;
     public ShuffleGraph graph;
-    
+
     public ShufflePanel() {
         setPreferredSize(new Dimension(700, 450));
         MouseHandler handler = new MouseHandler();
@@ -42,7 +42,8 @@ public class ShufflePanel extends JPanel implements KeyListener {
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -53,7 +54,8 @@ public class ShufflePanel extends JPanel implements KeyListener {
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyReleased(KeyEvent e) {
+    }
 
     protected class MouseHandler extends MouseAdapter {
         @Override

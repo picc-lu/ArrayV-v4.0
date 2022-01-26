@@ -2,14 +2,17 @@ package threads;
 
 import main.ArrayVisualizer;
 import panes.JErrorPane;
-import sorts.misc.*;
+import sorts.misc.BurntPancakeSort;
+import sorts.misc.PancakeSort;
 import sorts.templates.Sort;
 
 /*
- * 
+ *
 MIT License
 
 Copyright (c) 2019 w0rthy
+Copyright (c) 2021 ArrayV 4.0 Team
+Copyright (c) 2022 ArrayV Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +37,12 @@ SOFTWARE.
 final public class RunMiscellaneousSorts extends MultipleSortThread {
     private Sort PancakeSort;
     private Sort BurntPancakeSort;
-    
+
     public RunMiscellaneousSorts(ArrayVisualizer arrayVisualizer) {
         super(arrayVisualizer);
         this.sortCount = 2;
         this.categoryCount = this.sortCount;
-        
+
         PancakeSort      = new      PancakeSort(this.arrayVisualizer);
         BurntPancakeSort = new BurntPancakeSort(this.arrayVisualizer);
     }
@@ -49,39 +52,37 @@ final public class RunMiscellaneousSorts extends MultipleSortThread {
         RunMiscellaneousSorts.this.runIndividualSort(PancakeSort,      0, array, 128, 0.015, false);
         RunMiscellaneousSorts.this.runIndividualSort(BurntPancakeSort, 0, array, 128, 0.015, false);
     }
-    
+
     @Override
     protected synchronized void runThread(int[] array, int current, int total, boolean runAllActive) throws Exception {
-        if(arrayVisualizer.isActive())
+        if (arrayVisualizer.isActive())
             return;
 
         Sounds.toggleSound(true);
-        arrayVisualizer.setSortingThread(new Thread() {
+        arrayVisualizer.setSortingThread(new Thread("MiscSorts") {
             @Override
             public void run() {
                 try{
-                    if(runAllActive) {
+                    if (runAllActive) {
                         RunMiscellaneousSorts.this.sortNumber = current;
                         RunMiscellaneousSorts.this.sortCount = total;
-                    }
-                    else {
+                    } else {
                         RunMiscellaneousSorts.this.sortNumber = 1;
                     }
-                    
+
                     arrayManager.toggleMutableLength(false);
 
                     arrayVisualizer.setCategory("Miscellaneous Sorts");
 
                     RunMiscellaneousSorts.this.executeSortList(array);
-                    
-                    if(!runAllActive) {
+
+                    if (!runAllActive) {
                         arrayVisualizer.setCategory("Run Miscellaneous Sorts");
                         arrayVisualizer.setHeading("Done");
                     }
-                    
+
                     arrayManager.toggleMutableLength(true);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     JErrorPane.invokeErrorMessage(e);
                 }
                 Sounds.toggleSound(false);

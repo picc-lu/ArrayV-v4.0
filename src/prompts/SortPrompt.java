@@ -29,7 +29,7 @@ import panes.JErrorPane;
 import threads.*;
 
 /*
- * 
+ *
 MIT License
 
 Copyright (c) 2019 w0rthy
@@ -123,8 +123,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
                     break;
                 }
             }
-        }
-        else {
+        } else {
             jComboBox1.setSelectedIndex(lastCategory);
         }
         jTextField1.requestFocusInWindow();
@@ -214,7 +213,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         });
 
-        jButton1.setText("Run All Sorts (approx. 30-90 minutes)");
+        jButton1.setText("Showcase Sorts (approx. 30-90 minutes)");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -286,7 +285,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
-        new Thread(){
+        new Thread("AllSortsThread") {
             @Override
             public void run(){
                 RunAllSorts RunAllSorts = new RunAllSorts(ArrayVisualizer);
@@ -298,7 +297,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
-        new Thread(){
+        new Thread("ImportSort") {
             @Override
             public void run(){
                 File f = new ImportSortDialog().getFile();
@@ -317,8 +316,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             MultipleSortThread thread = categorySortThreads.get(jComboBox1.getSelectedItem());
             try {
                 thread.reportAllSorts(array, 1, thread.getSortCount());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 JErrorPane.invokeErrorMessage(e);
             }
         }
@@ -338,14 +336,13 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
         }
         final SortPair selection = sortNotFinal;
         UtilFrame.setSelection(selection);
-        new Thread(){
+        new Thread("SortingThread") {
             @Override
             public void run() {
                 if (selection.usesComparisons) {
                     RunComparisonSort sortThread = new RunComparisonSort(ArrayVisualizer);
                     sortThread.ReportComparativeSort(array, selection.id);
-                }
-                else {
+                } else {
                     RunDistributionSort sortThread = new RunDistributionSort(ArrayVisualizer);
                     sortThread.ReportDistributionSort(array, selection.id);
                 }
@@ -373,8 +370,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
         jList1.setListData(sorts.toArray());
         if (index == 0) {
             jButton3.setEnabled(false);
-        }
-        else {
+        } else {
             jButton3.setText("Run All ".concat(category));
             jButton3.setEnabled(categorySortThreads.containsKey(category));
         }

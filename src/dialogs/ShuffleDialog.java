@@ -29,12 +29,12 @@ import utils.Distributions;
 import utils.ShuffleGraph;
 import utils.ShuffleInfo;
 import utils.Shuffles;
-import utils.shuffle_utils.GraphReader;
-import utils.shuffle_utils.GraphWriter;
-import utils.shuffle_utils.GraphReader.MalformedGraphFileException;
+import utils.shuffleutils.GraphReader;
+import utils.shuffleutils.GraphReader.MalformedGraphFileException;
+import utils.shuffleutils.GraphWriter;
 
 /*
- * 
+ *
 MIT License
 
 Copyright (c) 2019 w0rthy
@@ -67,18 +67,18 @@ SOFTWARE.
 final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
-    
+
     private ArrayManager ArrayManager;
     private JFrame Frame;
     private UtilFrame UtilFrame;
     private List<Distributions> distributions;
     private static boolean perShuffleDelay = false;
-    
+
     private boolean bypassEvents;
-    
+
     /**
      * Creates new form SortPrompt
      */
@@ -89,14 +89,14 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
         this.ArrayManager = ArrayManager;
         this.Frame = frame;
         this.UtilFrame = utilFrame;
-        
+
         initComponents();
 
         bypassEvents = true;
         this.shuffleEditor.graph = ArrayManager.getShuffle();
         jList4.setListData(ArrayManager.getDistributionIDs());
-        for(int i = 0; i < ArrayManager.getDistributions().length; i++) {
-            if(ArrayManager.getDistribution().equals(ArrayManager.getDistributions()[i])) {
+        for (int i = 0; i < ArrayManager.getDistributions().length; i++) {
+            if (ArrayManager.getDistribution().equals(ArrayManager.getDistributions()[i])) {
                 jList4.setSelectedIndex(i);
                 break;
             }
@@ -134,7 +134,7 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
         setMinimumSize(new Dimension(765, 310));
         setAlwaysOnTop(false);
         reposition();
-        setVisible(true); 
+        setVisible(true);
     }
 
     @Override
@@ -185,7 +185,7 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
                 jButton1ActionPerformed();
             }
         });
-        
+
         jButton2.setText("Export...");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -193,7 +193,7 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
                 jButton2ActionPerformed();
             }
         });
-        
+
         jButton3.setText("Clear Disconnected Nodes");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -229,7 +229,7 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
 
         jScrollPane3.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane3.setViewportView(this.jList3);
-        
+
         jScrollPane2.setViewportView(this.jList2);
         jScrollPane2.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -427,7 +427,6 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
     }
 
     private void jList4ValueChanged(javax.swing.event.ListSelectionEvent evt) throws Exception {//GEN-FIRST:event_jList1ValueChanged
-        // TODO add your handling code here:
         if (bypassEvents)
             return;
         int selection = jList4.getSelectedIndex();
@@ -437,7 +436,6 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
     }//GEN-LAST:event_jList1ValueChanged
 
     private void jList1ValueChanged(javax.swing.event.ListSelectionEvent evt) throws Exception {//GEN-FIRST:event_jList1ValueChanged
-        // TODO add your handling code here:
         if (bypassEvents)
             return;
         String selection = (String)jList1.getSelectedValue();
@@ -454,7 +452,6 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
     }//GEN-LAST:event_jList1ValueChanged
 
     private void jList3ValueChanged(javax.swing.event.ListSelectionEvent evt) throws Exception {//GEN-FIRST:event_jList1ValueChanged
-        // TODO add your handling code here:
         if (bypassEvents)
             return;
         String selection = (String)jList3.getSelectedValue();
@@ -471,7 +468,6 @@ final public class ShuffleDialog extends javax.swing.JDialog implements AppFrame
     }//GEN-LAST:event_jList1ValueChanged
 
     private void jList2ValueChanged(javax.swing.event.ListSelectionEvent evt) throws Exception {//GEN-FIRST:event_jList1ValueChanged
-        // TODO add your handling code here:
         if (bypassEvents)
             return;
         int selection = jList2.getSelectedIndex();

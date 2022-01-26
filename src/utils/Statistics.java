@@ -6,11 +6,14 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
 final public class Statistics {
+    public long frameTimeMillis;
+
     private String sortCategory;
     private String sortHeading;
     private String sortExtraHeading;
     private String arrayLength;
 
+    private String framerate;
     private String sortDelay;
     private String visualTime;
     private String estSortTime;
@@ -61,6 +64,11 @@ final public class Statistics {
         this.arrayLength = this.formatter.format(ArrayVisualizer.getCurrentLength()) + " Numbers"
                 + ", " + this.formatter.format(showUnique) + " Unique";
 
+        if (frameTimeMillis == 0) {
+            this.framerate = ">1000 FPS";
+        } else {
+            this.framerate = (int)(1000.0 / frameTimeMillis) + " FPS";
+        }
         this.sortDelay = "Delay: " + ArrayVisualizer.getDelays().displayCurrentDelay();
         this.visualTime = "Visual Time: " + ArrayVisualizer.getTimer().getVisualTime();
         this.estSortTime = "Sort Time: " + ArrayVisualizer.getTimer().getRealTime();
@@ -102,7 +110,9 @@ final public class Statistics {
     public String getArrayLength() {
         return this.arrayLength + this.sortExtraHeading;
     }
-
+    public String getFramerate() {
+        return this.framerate;
+    }
     public String getSortDelay() {
         return this.sortDelay;
     }
@@ -138,7 +148,6 @@ final public class Statistics {
     public String getAuxAllocAmount() {
         return this.auxAllocAmount;
     }
-
     public String getSegments() {
         return this.segments;
     }

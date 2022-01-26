@@ -1,5 +1,52 @@
 package main;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.Stroke;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Scanner;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+
 import dialogs.FileDialog;
 import dialogs.SaveArrayDialog;
 import frames.ArrayFrame;
@@ -8,9 +55,17 @@ import frames.UtilFrame;
 import main.SortAnalyzer.SortPair;
 import panes.JErrorPane;
 import threads.RunScriptedSorts;
+import utils.AntiQSort;
+import utils.ArrayFileWriter;
+import utils.Delays;
+import utils.Highlights;
+import utils.MultipleScript;
+import utils.Reads;
 import utils.Renderer;
+import utils.Sounds;
+import utils.Statistics;
 import utils.Timer;
-import utils.*;
+import utils.Writes;
 import visuals.Visual;
 import visuals.VisualStyles;
 import visuals.bars.BarGraph;
@@ -29,23 +84,8 @@ import visuals.image.CustomImage;
 import visuals.misc.HoopStack;
 import visuals.misc.PixelMesh;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.event.*;
-import java.io.File;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.util.List;
-import java.util.*;
-
 /*
- * 
+ *
 The MIT License (MIT)
 
 Copyright (c) 2019 w0rthy
@@ -73,17 +113,56 @@ SOFTWARE.
  *
  */
 
-final public class ArrayVisualizer {
+public final class ArrayVisualizer {
+    private static ArrayVisualizer INSTANCE = null;
+
+    private enum StatisticType {
+        LINE_BREAK,
+        SORT_IDENTITY,
+        ARRAY_LENGTH,
+        FRAMERATE,
+        SORT_DELAY,
+        VISUAL_TIME,
+        EST_SORT_TIME,
+        COMPARISONS,
+        SWAPS,
+        REVERSALS,
+        MAIN_WRITE,
+        AUX_WRITE,
+        AUX_ALLOC,
+        SEGMENTS;
+
+        private static final Map<String, StatisticType> CONFIG_KEYS = Collections.unmodifiableMap(new HashMap<String, StatisticType>() {{
+            put("",         LINE_BREAK);
+            put("sort",     SORT_IDENTITY);
+            put("length",   ARRAY_LENGTH);
+            put("fps",      FRAMERATE);
+            put("delay",    SORT_DELAY);
+            put("vtime",    VISUAL_TIME);
+            put("stime",    EST_SORT_TIME);
+            put("comps",    COMPARISONS);
+            put("swaps",    SWAPS);
+            put("revs",     REVERSALS);
+            put("wmain",    MAIN_WRITE);
+            put("waux",     AUX_WRITE);
+            put("auxlen",   AUX_ALLOC);
+            put("segments", SEGMENTS);
+        }});
+    }
+
     final JFrame window;
 
     final private int MIN_ARRAY_VAL;
     final private int MAX_ARRAY_VAL;
+
+    final private Properties buildInfo;
 
     final int[] array;
     final int[] validateArray;
     final int[] stabilityTable;
     final int[] indexTable;
     final ArrayList<int[]> arrays;
+    private final StatisticType[] statsConfig;
 
     private SortPair[] AllSorts; // First row of Comparison/DistributionSorts arrays consists of class names
     private SortPair[] ComparisonSorts; // First row of Comparison/DistributionSorts arrays consists of class names
@@ -125,6 +204,7 @@ final public class ArrayVisualizer {
 
     private Statistics statSnapshot;
     private String fontSelection;
+    private double fontSelectionScale;
 
     private volatile boolean TEXTDRAW;
     private volatile boolean COLOR;
@@ -163,7 +243,6 @@ final public class ArrayVisualizer {
     private Writes Writes;
     private AntiQSort AntiQSort;
 
-    private volatile boolean updateVisuals;
     private volatile int updateVisualsForced;
     public  volatile boolean benchmarking;
 
@@ -176,6 +255,18 @@ final public class ArrayVisualizer {
     private String detailAction;
 
     public ArrayVisualizer() {
+        if (INSTANCE != null) {
+            throw new IllegalStateException("Cannot create more than one ArrayVisualizer");
+        }
+        INSTANCE = this;
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        UIManager.getLookAndFeelDefaults().put("Slider.paintValue", Boolean.FALSE); // GTK PLAF fix
+
         this.window = new JFrame();
         this.window.addKeyListener(new KeyListener() {
             @Override
@@ -185,6 +276,8 @@ final public class ArrayVisualizer {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_K || e.getKeyCode() == KeyEvent.VK_SPACE) {
                     ArrayVisualizer.this.getDelays().togglePaused();
+                } else if (e.getKeyCode() == KeyEvent.VK_F12) {
+                    System.gc();
                 }
             }
             @Override
@@ -228,28 +321,25 @@ final public class ArrayVisualizer {
                 if (e.getKeyCode() == KeyEvent.VK_O && (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
                     if (ArrayVisualizer.this.isActive())
                         return false;
-                    Thread thread = new Thread(){
+                    Thread thread = new Thread("ScriptSortThread") {
                         @Override
                         public void run(){
                             RunScriptedSorts RunScriptedSorts = new RunScriptedSorts(ArrayVisualizer.this);
                             try {
                                 RunScriptedSorts.runThread(ArrayVisualizer.this.getArray(), 0, 0, false);
-                            }
-                            catch (Exception e) {
+                            } catch (Exception e) {
                                 JErrorPane.invokeErrorMessage(e);
                             }
                         }
                     };
                     thread.start();
                     return true;
-                }
-                else if (e.getKeyCode() == KeyEvent.VK_S && (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
+                } else if (e.getKeyCode() == KeyEvent.VK_S && (e.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0) {
                     int[] snapshot = Arrays.copyOfRange(ArrayVisualizer.this.getArray(), 0, ArrayVisualizer.this.getCurrentLength());
                     FileDialog selected = new SaveArrayDialog();
                     ArrayFileWriter.writeArray(selected.getFile(), snapshot, snapshot.length);
                     return true;
-                }
-                else if (e.getKeyCode() == KeyEvent.VK_F5) {
+                } else if (e.getKeyCode() == KeyEvent.VK_F5) {
                     ArrayVisualizer.this.updateNow();
                     return true;
                 }
@@ -280,12 +370,23 @@ final public class ArrayVisualizer {
             }
         });
 
-        new Thread() {
+        new Thread("FileDialogInitializer") {
             @Override
             public void run() {
                 FileDialog.initialize();
             }
         }.start();
+
+        this.buildInfo = new Properties();
+        this.buildInfo.setProperty("commitId", "unknown"); // Put default
+        try (InputStream is = getClass().getResourceAsStream("/buildInfo.properties")) {
+            if (is != null) {
+                this.buildInfo.load(is);
+            }
+        } catch (IOException e) {
+            System.err.println("Unable to read buildInfo.properties");
+            e.printStackTrace();
+        }
 
         this.MIN_ARRAY_VAL = 2;
         this.MAX_ARRAY_VAL = (int)Math.pow(2, MAX_LENGTH_POWER);
@@ -305,6 +406,81 @@ final public class ArrayVisualizer {
         this.arrays = new ArrayList<>();
         this.arrays.add(this.array);
 
+        this.fontSelection = "Times New Roman";
+        this.fontSelectionScale = 25;
+        List<StatisticType> statsInfoList = new ArrayList<>();
+        Throwable statsLoadException = null;
+        while (true) {
+            try (Scanner statsScanner = new Scanner(new File("stats-config.txt"))) {
+                while (statsScanner.hasNextLine()) {
+                    String line = statsScanner.nextLine().trim();
+                    if (line.length() > 0 && line.charAt(0) == '#') continue;
+                    if (line.startsWith("FONT:")) {
+                        String font = line.substring(5);
+                        int starIndex;
+                        if ((starIndex = font.indexOf('*')) != -1) {
+                            fontSelectionScale = Double.parseDouble(font.substring(starIndex + 1).trim());
+                            font = font.substring(0, starIndex);
+                        }
+                        fontSelection = font.trim();
+                        continue;
+                    }
+                    StatisticType type = StatisticType.CONFIG_KEYS.get(line.toLowerCase());
+                    if (type == null) {
+                        System.err.println("Unknown statistic type: " + type);
+                        continue;
+                    }
+                    statsInfoList.add(type);
+                }
+            } catch (FileNotFoundException e) {
+                try (InputStream in = getClass().getResourceAsStream("/stats-config.txt")) {
+                    try (OutputStream out = new FileOutputStream("stats-config.txt")) {
+                        byte[] buf = new byte[8192];
+                        int length;
+                        while ((length = in.read(buf)) > 0) {
+                            out.write(buf, 0, length);
+                        }
+                    } catch (Exception e2) {
+                        statsLoadException = e2;
+                    }
+                } catch (Exception e2) {
+                    statsLoadException = e2;
+                }
+                continue;
+            } catch (Exception e) {
+                statsLoadException = e;
+            }
+            break;
+        }
+        if (statsLoadException != null) {
+            JErrorPane.invokeErrorMessage(statsLoadException, "ArrayVisualizer");
+            JOptionPane.showMessageDialog(
+                this.window,
+                "Unable to load stats-config, using default config",
+                "ArrayVisualizer",
+                JOptionPane.WARNING_MESSAGE
+            );
+            statsConfig = new StatisticType[] {
+                StatisticType.SORT_IDENTITY,
+                StatisticType.ARRAY_LENGTH,
+                    StatisticType.LINE_BREAK,
+                StatisticType.SORT_DELAY,
+                StatisticType.VISUAL_TIME,
+                StatisticType.EST_SORT_TIME,
+                    StatisticType.LINE_BREAK,
+                StatisticType.COMPARISONS,
+                StatisticType.SWAPS,
+                StatisticType.REVERSALS,
+                    StatisticType.LINE_BREAK,
+                StatisticType.MAIN_WRITE,
+                StatisticType.AUX_WRITE,
+                StatisticType.AUX_ALLOC,
+                StatisticType.SEGMENTS
+            };
+        } else {
+            statsConfig = statsInfoList.toArray(new StatisticType[statsInfoList.size()]);
+        }
+
         this.sortLength = Math.min(2048, this.MAX_ARRAY_VAL);
         this.uniqueItems = this.sortLength;
 
@@ -322,8 +498,6 @@ final public class ArrayVisualizer {
         this.Renderer = new Renderer(this);
         this.Writes = new Writes(this);
         this.AntiQSort = new AntiQSort(this);
-
-        new Rotations(this);
 
         SoundFrame test = new SoundFrame(this.Sounds);
         test.setVisible(true);
@@ -366,8 +540,7 @@ final public class ArrayVisualizer {
         this.category = "";
         this.heading = "";
         this.extraHeading = "";
-        this.fontSelection = "Times New Roman";
-        this.typeFace = new Font(this.fontSelection, Font.PLAIN, (int) (this.getWindowRatio() * 25));
+        this.typeFace = new Font(fontSelection, Font.PLAIN, (int) (this.getWindowRatio() * fontSelectionScale));
 
         this.action = "";
         this.detailAction = "";
@@ -411,7 +584,7 @@ final public class ArrayVisualizer {
         //TODO: Overhaul visual code to properly reflect Swing (JavaFX?) style and conventions
         this.toggleVisualUpdates(false);
         //DRAW THREAD
-        this.visualsThread = new Thread() {
+        this.visualsThread = new Thread("VisualsThread") {
             @SuppressWarnings("unused")
             @Override
             public void run() {
@@ -451,14 +624,15 @@ final public class ArrayVisualizer {
                             e.printStackTrace();
                         }
                     }
+                    long startTime = System.currentTimeMillis();
                     try {
-                        if(ArrayVisualizer.this.updateVisualsForced > 0) {
+                        if (ArrayVisualizer.this.updateVisualsForced > 0) {
                             ArrayVisualizer.this.updateVisualsForced--;
                             ArrayVisualizer.this.Renderer.updateVisualsStart(ArrayVisualizer.this);
                             int[][] arrays = ArrayVisualizer.this.arrays.toArray(new int[][] { });
                             ArrayVisualizer.this.Renderer.drawVisual(ArrayVisualizer.this.VisualStyles, arrays, ArrayVisualizer.this, ArrayVisualizer.this.Highlights);
 
-                            if(ArrayVisualizer.this.TEXTDRAW) {
+                            if (ArrayVisualizer.this.TEXTDRAW) {
                                 ArrayVisualizer.this.statSnapshot.updateStats(ArrayVisualizer.this);
                                 ArrayVisualizer.this.updateFontSize();
                                 ArrayVisualizer.this.drawStats(Color.BLACK, true);
@@ -472,22 +646,25 @@ final public class ArrayVisualizer {
                         if (ArrayVisualizer.this.updateVisualsForced > 10000) {
                             ArrayVisualizer.this.updateVisualsForced = 100;
                         }
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    // See: https://stackoverflow.com/questions/580419/how-can-i-stop-a-java-while-loop-from-eating-50-of-my-cpu/583537#583537
-                    try {
-                        Thread.sleep(ArrayVisualizer.this.benchmarking ? 1000 : 0);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        ArrayVisualizer.this.visualsEnabled = false;
-                    }
-
-                }}};
+                    long endTime = System.currentTimeMillis();
+                    statSnapshot.frameTimeMillis = endTime - startTime;
+                }
+            }
+        };
 
         this.Sounds.startAudioThread();
         this.drawWindows();
+    }
+
+    public static ArrayVisualizer getInstance() {
+        return INSTANCE;
+    }
+
+    public JFrame getWindow() {
+        return window;
     }
 
     public void refreshSorts() {
@@ -504,45 +681,69 @@ final public class ArrayVisualizer {
     private void drawStats(Color textColor, boolean dropShadow) {
         int xOffset = 15;
         int yOffset = 30;
-        if(dropShadow) {
+        if (dropShadow) {
             xOffset += 3;
             yOffset += 3;
         }
 
         double windowRatio = this.getWindowRatio();
+        int yPos = (int)(fontSelectionScale / 25.0 * 30);
 
         this.mainRender.setColor(textColor);
 
-        this.mainRender.drawString(this.statSnapshot.getSortIdentity(),          xOffset, (int) (windowRatio *  30) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getArrayLength(),           xOffset, (int) (windowRatio *  55) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getSortDelay(),             xOffset, (int) (windowRatio *  95) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getVisualTime(),            xOffset, (int) (windowRatio * 120) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getEstSortTime(),           xOffset, (int) (windowRatio * 145) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getComparisonCount(),       xOffset, (int) (windowRatio * 185) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getSwapCount(),             xOffset, (int) (windowRatio * 210) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getReversalCount(),         xOffset, (int) (windowRatio * 235) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getMainWriteCount(),        xOffset, (int) (windowRatio * 275) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getAuxWriteCount(),         xOffset, (int) (windowRatio * 300) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getAuxAllocAmount(),        xOffset, (int) (windowRatio * 325) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getSegments(),              xOffset, (int) (windowRatio * 355) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getReadWriteRatio(),        xOffset, (int) (windowRatio * 390) + yOffset);
-        this.mainRender.drawString(this.statSnapshot.getTotalCost(),             xOffset, (int) (windowRatio * 415) + yOffset);
-    }
-
-    private void drawAction(Color textColor, boolean dropShadow) {
-        int xOffset = 15;
-        int yOffset = 0;
-        if(dropShadow) {
-            xOffset += 3;
-            yOffset += 3;
+        statLoop:
+        for (StatisticType statType : statsConfig) {
+            // System.out.println(yPos);
+            String stat;
+            switch (statType) {
+                case LINE_BREAK:
+                    yPos += (int)(fontSelectionScale / 25.0 * 15);
+                    continue statLoop;
+                case SORT_IDENTITY:
+                    stat = statSnapshot.getSortIdentity();
+                    break;
+                case ARRAY_LENGTH:
+                    stat = statSnapshot.getArrayLength();
+                    break;
+                case FRAMERATE:
+                    stat = statSnapshot.getFramerate();
+                    break;
+                case SORT_DELAY:
+                    stat = statSnapshot.getSortDelay();
+                    break;
+                case VISUAL_TIME:
+                    stat = statSnapshot.getVisualTime();
+                    break;
+                case EST_SORT_TIME:
+                    stat = statSnapshot.getEstSortTime();
+                    break;
+                case COMPARISONS:
+                    stat = statSnapshot.getComparisonCount();
+                    break;
+                case SWAPS:
+                    stat = statSnapshot.getSwapCount();
+                    break;
+                case REVERSALS:
+                    stat = statSnapshot.getReversalCount();
+                    break;
+                case MAIN_WRITE:
+                    stat = statSnapshot.getMainWriteCount();
+                    break;
+                case AUX_WRITE:
+                    stat = statSnapshot.getAuxWriteCount();
+                    break;
+                case AUX_ALLOC:
+                    stat = statSnapshot.getAuxAllocAmount();
+                    break;
+                case SEGMENTS:
+                    stat = statSnapshot.getSegments();
+                    break;
+                default:
+                    stat = null; // Unreachable
+            }
+            mainRender.drawString(stat, xOffset, (int)(windowRatio * yPos) + yOffset);
+            yPos += fontSelectionScale;
         }
-
-        double windowRatio = this.getWindowRatio();
-
-        this.mainRender.setColor(textColor);
-
-        this.mainRender.drawString(this.getAction(), xOffset, (int) (windowHeight() - (windowRatio * 40) + yOffset));
-        this.mainRender.drawString(this.getDetailAction(), xOffset, (int) (windowHeight() - (windowRatio * 18) + yOffset));
     }
 
     public void updateNow() {
@@ -559,17 +760,21 @@ final public class ArrayVisualizer {
         }
     }
 
+    /**
+     * @deprecated This method no longer does anything!
+     */
+    @Deprecated
     public void toggleVisualUpdates(boolean bool) {
-        this.updateVisuals = bool;
     }
+
     public void forceVisualUpdate(int count) {
         this.updateVisualsForced += count;
     }
+
     public boolean enableBenchmarking(boolean enabled) {
         if (enabled) {
 
-        }
-        else if (this.benchmarking) {
+        } else if (this.benchmarking) {
             if (this.getCurrentLength() >= Math.pow(2, 23)) {
                 int warning = JOptionPane.showOptionDialog(this.getMainWindow(), "Warning! "
                 + "Your computer's GPU probably can't handle more than 2^23 elements at any "
@@ -582,7 +787,6 @@ final public class ArrayVisualizer {
             }
         }
         this.benchmarking = enabled;
-        this.updateVisuals = !benchmarking;
         return this.benchmarking;
     }
 
@@ -601,7 +805,7 @@ final public class ArrayVisualizer {
     }
 
     public void resetStabilityTable() {
-        for(int i = 0; i < this.sortLength; i++) {
+        for (int i = 0; i < this.sortLength; i++) {
             this.stabilityTable[i] = i;
         }
     }
@@ -617,13 +821,13 @@ final public class ArrayVisualizer {
     }
 
     public void setIndexTable() {
-        for(int i = 0; i < this.sortLength; i++) {
+        for (int i = 0; i < this.sortLength; i++) {
             this.indexTable[array[i]] = i;
         }
     }
 
     public void resetIndexTable() {
-        for(int i = 0; i < this.sortLength; i++) {
+        for (int i = 0; i < this.sortLength; i++) {
             this.indexTable[i] = i;
         }
     }
@@ -901,14 +1105,11 @@ final public class ArrayVisualizer {
         if(this.colorEnabled()) {
             if(this.analysisEnabled())
                 return Color.LIGHT_GRAY;
-
             else
                 return Color.WHITE;
-        }
-        else {
+        } else {
             if(this.analysisEnabled())
                 return Color.BLUE;
-
             else
                 return Color.RED;
         }
@@ -942,7 +1143,7 @@ final public class ArrayVisualizer {
         this.extraRender = (Graphics2D) this.img.getGraphics();
     }
     public void updateVisuals() {
-        for(Visual visual : this.visualClasses) {
+        for (Visual visual : this.visualClasses) {
             visual.updateRender(this);
         }
     }
@@ -967,7 +1168,7 @@ final public class ArrayVisualizer {
         return this.cw / 1280d;
     }
     public void updateFontSize() {
-        this.typeFace = new Font(this.fontSelection, Font.PLAIN, (int) (this.getWindowRatio() * 25));
+        this.typeFace = new Font(fontSelection, Font.PLAIN, (int) (this.getWindowRatio() * fontSelectionScale));
         this.mainRender.setFont(this.typeFace);
     }
 
@@ -1014,11 +1215,11 @@ final public class ArrayVisualizer {
                     validateFailed = true;
                     invalidateIdx = i;
                 }
-                if(stable && this.Reads.compareOriginalValues(this.array[i], this.array[i + 1]) == cmpVal) {
+                if (stable && this.Reads.compareOriginalValues(this.array[i], this.array[i + 1]) == cmpVal) {
                     stable = false;
                     unstableIdx = i;
                 }
-                if(this.Reads.compareValues(this.array[i], this.array[i + 1]) == cmpVal) {
+                if (this.Reads.compareValues(this.array[i], this.array[i + 1]) == cmpVal) {
                     this.Highlights.clearMark(1);
 
                     boolean tempSound = this.Sounds.isEnabled();
@@ -1049,7 +1250,7 @@ final public class ArrayVisualizer {
 
         // if (tempStability && success)
         //     JOptionPane.showMessageDialog(this.window, "This sort is stable!", "Information", JOptionPane.OK_OPTION, null);
-        if(this.STABILITY && success && !stable) {
+        if (this.STABILITY && success && !stable) {
             boolean tempSound = this.Sounds.isEnabled();
             this.Sounds.toggleSound(false);
             this.Highlights.toggleFancyFinish(false);
@@ -1063,8 +1264,7 @@ final public class ArrayVisualizer {
 
             this.Highlights.clearAllMarks();
             this.Sounds.toggleSound(tempSound);
-        }
-        else if(success && validateFailed) {
+        } else if (success && validateFailed) {
             boolean tempSound = this.Sounds.isEnabled();
             this.Sounds.toggleSound(false);
             this.Highlights.toggleFancyFinish(false);
@@ -1156,7 +1356,7 @@ final public class ArrayVisualizer {
     }
 
     public void setVisual(VisualStyles choice) {
-        if(choice == visuals.VisualStyles.CUSTOM_IMAGE) {
+        if (choice == visuals.VisualStyles.CUSTOM_IMAGE) {
             ((CustomImage) this.visualClasses[9]).enableImgMenu();
         }
         this.VisualStyles = choice;
@@ -1215,7 +1415,7 @@ final public class ArrayVisualizer {
 
     private static String parseStringArray(String[] stringArray) {
         String parsed = "";
-        for(int i = 0; i < stringArray.length; i++) {
+        for (int i = 0; i < stringArray.length; i++) {
             parsed += stringArray[i] + "\n";
         }
         return parsed;
@@ -1228,9 +1428,17 @@ final public class ArrayVisualizer {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.window.setSize((int) (screenSize.getWidth() / 2), (int) (screenSize.getHeight() / 2));
 
+        StringBuilder title = new StringBuilder("w0rthy's Array Visualizer - ");
+        title.append(this.ComparisonSorts.length + this.DistributionSorts.length);
+        title.append(" Sorts, 15 Visual Styles, and Infinite Inputs to Sort");
+        String versionSha = buildInfo.getProperty("commitId");
+        if (!versionSha.equals("@git.sha@") && !versionSha.equals("unknown")) { // Hash not loaded
+            title.append(" (commit ").append(versionSha).append(")");
+        }
+
         this.window.setLocation(0, 0);
         this.window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.window.setTitle("w0rthy's Array Visualizer - " + (this.ComparisonSorts.length + this.DistributionSorts.length) + " Sorts, 15 Visual Styles, and Infinite Inputs to Sort");
+        this.window.setTitle(title.toString());
         this.window.setBackground(Color.BLACK);
         this.window.setIgnoreRepaint(true);
 
@@ -1239,7 +1447,7 @@ final public class ArrayVisualizer {
             public void windowClosing(WindowEvent close) {
                 ArrayVisualizer.this.Sounds.closeSynth();
                 ArrayVisualizer.this.visualsEnabled = false;
-                if(ArrayVisualizer.this.isActive()) {
+                if (ArrayVisualizer.this.isActive()) {
                     ArrayVisualizer.this.sortingThread.interrupt();
                 }
             }
@@ -1260,7 +1468,7 @@ final public class ArrayVisualizer {
             String output = parseStringArray(this.InvalidSorts);
             JOptionPane.showMessageDialog(this.window, "The following algorithms were not loaded:\n" + output, "Warning", JOptionPane.WARNING_MESSAGE);
         }
-        if(this.sortSuggestions != null) {
+        if (this.sortSuggestions != null) {
             String output = parseStringArray(this.sortSuggestions);
             JOptionPane.showMessageDialog(this.window, "Here's a list of suggestions based on your sorts:\n" + output, "Info", JOptionPane.INFORMATION_MESSAGE);
         }

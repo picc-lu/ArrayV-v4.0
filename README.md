@@ -1,8 +1,8 @@
 # w0rthy's Array Visualizer, Revamped
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/gaming32/ArrayV-v4.0/ant)
-![GitHub all releases](https://img.shields.io/github/downloads/gaming32/ArrayV-v4.0/total?color=green)
 ![Discord](https://img.shields.io/discord/592082838791127075?color=%237289DA&label=Discord&logo=discord&logoColor=white)
+<!-- ![GitHub all releases](https://img.shields.io/github/downloads/gaming32/ArrayV-v4.0/total?color=green) -->
 
 Over 225 sorting algorithms animated with 13 unique graphic designs
 
@@ -10,13 +10,22 @@ Over 225 sorting algorithms animated with 13 unique graphic designs
 
 This new version of the program features additions inspired by Timo Bingmann's "The Sound of Sorting" and w0rthy's updates to the original visualizer.
 
-To compile (After -cp, use ";" with Windows and ":" with Mac/Linux):
+To compile use:
+```shell
+./antw
 ```
-ant
-java -cp bin;lib/classgraph-4.8.47.jar main.ArrayVisualizer
+Or alternatively double-click on "antw" or "antw.bat" on Windows.
+
+To create a runnable JAR, run `./antw dist-jar`. The JAR will be placed in the `dist` directory.
+
+To run use:
+```shell
+./run
 ```
-To build a runnable jar, simply run Apache Ant inside the 'dist' directory (but make sure you did the above first)!
-If you don't want to use Apache Ant or the Java command line, a runnable jar that is up to a month old is available from the `dist` directory. 
+Alternatively, you can double click on "run" or "run.bat" on Windows.
+
+
+You can always download the most up-to-date pre-built JAR from [GitHub Actions](https://nightly.link/Gaming32/ArrayV-v4.0/workflows/ant/main/standalone-jar.zip) (link via [nightly.link](https://nightly.link)).
 
 ### Features:
 - 40+ new sorting algorithms

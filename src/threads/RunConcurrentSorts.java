@@ -2,14 +2,36 @@ package threads;
 
 import main.ArrayVisualizer;
 import panes.JErrorPane;
-import sorts.concurrent.*;
+import sorts.concurrent.BitonicSortIterative;
+import sorts.concurrent.BitonicSortParallel;
+import sorts.concurrent.BitonicSortRecursive;
+import sorts.concurrent.BoseNelsonSortIterative;
+import sorts.concurrent.BoseNelsonSortParallel;
+import sorts.concurrent.BoseNelsonSortRecursive;
+import sorts.concurrent.CreaseSort;
+import sorts.concurrent.DiamondSortIterative;
+import sorts.concurrent.DiamondSortRecursive;
+import sorts.concurrent.FoldSort;
+import sorts.concurrent.MatrixSort;
+import sorts.concurrent.MergeExchangeSortIterative;
+import sorts.concurrent.OddEvenMergeSortIterative;
+import sorts.concurrent.OddEvenMergeSortParallel;
+import sorts.concurrent.OddEvenMergeSortRecursive;
+import sorts.concurrent.PairwiseMergeSortIterative;
+import sorts.concurrent.PairwiseMergeSortRecursive;
+import sorts.concurrent.PairwiseSortIterative;
+import sorts.concurrent.PairwiseSortRecursive;
+import sorts.concurrent.WeaveSortIterative;
+import sorts.concurrent.WeaveSortParallel;
+import sorts.concurrent.WeaveSortRecursive;
 import sorts.templates.Sort;
 
 /*
- * 
+ *
 MIT License
 
-Copyright (c) 2019 ArrayV 4.0 Team
+Copyright (c) 2020 ArrayV 4.0 Team
+Copyright (c) 2022 ArrayV Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,17 +73,15 @@ final public class RunConcurrentSorts extends MultipleSortThread {
     private Sort DiamondSortIterative;
     private Sort DiamondSortRecursive;
     private Sort OddEvenMergeSortParallel;
-    private Sort OptimizedOddEvenMergeSort;
     private Sort PairwiseMergeSortIterative;
     private Sort PairwiseMergeSortRecursive;
     private Sort WeaveSortParallel;
-    private Sort ApollyonSort;
-    
+
     public RunConcurrentSorts(ArrayVisualizer arrayVisualizer) {
         super(arrayVisualizer);
-        this.sortCount = 24;
+        this.sortCount = 22;
         this.categoryCount = this.sortCount;
-        
+
         FoldSort                   = new                   FoldSort(this.arrayVisualizer);
         CreaseSort                 = new                 CreaseSort(this.arrayVisualizer);
         MatrixSort                 = new                 MatrixSort(this.arrayVisualizer);
@@ -81,11 +101,9 @@ final public class RunConcurrentSorts extends MultipleSortThread {
         DiamondSortIterative       = new       DiamondSortIterative(this.arrayVisualizer);
         DiamondSortRecursive       = new       DiamondSortRecursive(this.arrayVisualizer);
         OddEvenMergeSortParallel   = new   OddEvenMergeSortParallel(this.arrayVisualizer);
-        OptimizedOddEvenMergeSort  = new  OptimizedOddEvenMergeSort(this.arrayVisualizer);
         PairwiseMergeSortIterative = new PairwiseMergeSortIterative(this.arrayVisualizer);
         PairwiseMergeSortRecursive = new PairwiseMergeSortRecursive(this.arrayVisualizer);
         WeaveSortParallel          = new          WeaveSortParallel(this.arrayVisualizer);
-        ApollyonSort               = new               ApollyonSort(this.arrayVisualizer);
     }
 
     @Override
@@ -93,9 +111,7 @@ final public class RunConcurrentSorts extends MultipleSortThread {
         // Other
         RunConcurrentSorts.this.runIndividualSort(FoldSort,                   0, array, 1024, 1,     false);
         RunConcurrentSorts.this.runIndividualSort(CreaseSort,                 0, array, 1024, 1,     false);
-        RunConcurrentSorts.this.runIndividualSort(ApollyonSort,               0, array, 1024, 1,     false);
         RunConcurrentSorts.this.runIndividualSort(MatrixSort,                 0, array, 256,  0.667, false);
-        RunConcurrentSorts.this.runIndividualSort(OptimizedOddEvenMergeSort,  0, array, 1024, 1,     false);
 
         // Recursive
         RunConcurrentSorts.this.runIndividualSort(BitonicSortRecursive,       0, array, 1024, 1,     false);
@@ -122,22 +138,21 @@ final public class RunConcurrentSorts extends MultipleSortThread {
         RunConcurrentSorts.this.runIndividualSort(DiamondSortIterative,       0, array, 1024, 1,     false);
         RunConcurrentSorts.this.runIndividualSort(PairwiseMergeSortIterative, 0, array, 1024, 1,     false);
     }
-    
+
     @Override
     protected synchronized void runThread(int[] array, int current, int total, boolean runAllActive) throws Exception {
-        if(arrayVisualizer.isActive())
+        if (arrayVisualizer.isActive())
             return;
 
         Sounds.toggleSound(true);
-        arrayVisualizer.setSortingThread(new Thread() {
+        arrayVisualizer.setSortingThread(new Thread("ConcurrentSorts") {
             @Override
             public void run() {
                 try{
-                    if(runAllActive) {
+                    if (runAllActive) {
                         RunConcurrentSorts.this.sortNumber = current;
                         RunConcurrentSorts.this.sortCount = total;
-                    }
-                    else {
+                    } else {
                         RunConcurrentSorts.this.sortNumber = 1;
                     }
 
@@ -146,15 +161,14 @@ final public class RunConcurrentSorts extends MultipleSortThread {
                     arrayVisualizer.setCategory("Concurrent Sorts");
 
                     RunConcurrentSorts.this.executeSortList(array);
-                    
-                    if(!runAllActive) {
+
+                    if (!runAllActive) {
                         arrayVisualizer.setCategory("Run Concurrent Sorts");
                         arrayVisualizer.setHeading("Done");
                     }
-                    
+
                     arrayManager.toggleMutableLength(true);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     JErrorPane.invokeErrorMessage(e);
                 }
                 Sounds.toggleSound(false);

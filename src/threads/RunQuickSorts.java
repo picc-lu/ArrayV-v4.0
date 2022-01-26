@@ -2,15 +2,13 @@ package threads;
 
 import main.ArrayVisualizer;
 import panes.JErrorPane;
-import sorts.quick.*;
-import sorts.templates.Sort;
-import utils.Shuffles;
 
 /*
- * 
+ *
 MIT License
 
 Copyright (c) 2021 ArrayV 4.0 Team
+Copyright (c) 2022 ArrayV Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,53 +31,47 @@ SOFTWARE.
  */
 
 final public class RunQuickSorts extends MultipleSortThread {
-    private Sort CubeRootQuickSort;
-    
+
     public RunQuickSorts(ArrayVisualizer arrayVisualizer) {
         super(arrayVisualizer);
-        this.sortCount = 1;
+        this.sortCount = 0;
         this.categoryCount = this.sortCount;
-        
-        CubeRootQuickSort = new CubeRootQuickSort(this.arrayVisualizer);
     }
 
     @Override
     protected synchronized void executeSortList(int[] array) throws Exception {
-        RunQuickSorts.this.runIndividualSort(CubeRootQuickSort, 0, array, 2048, arrayManager.containsShuffle(Shuffles.RANDOM) ? 1 : 6.5, false);
     }
-    
+
     @Override
     protected synchronized void runThread(int[] array, int current, int total, boolean runAllActive) throws Exception {
-        if(arrayVisualizer.isActive())
+        if (arrayVisualizer.isActive())
             return;
 
         Sounds.toggleSound(true);
-        arrayVisualizer.setSortingThread(new Thread() {
+        arrayVisualizer.setSortingThread(new Thread("QuickSorts") {
             @Override
             public void run() {
                 try{
-                    if(runAllActive) {
+                    if (runAllActive) {
                         RunQuickSorts.this.sortNumber = current;
                         RunQuickSorts.this.sortCount = total;
-                    }
-                    else {
+                    } else {
                         RunQuickSorts.this.sortNumber = 1;
                     }
-                    
+
                     arrayManager.toggleMutableLength(false);
 
                     arrayVisualizer.setCategory("Quick Sorts");
 
                     RunQuickSorts.this.executeSortList(array);
-                    
-                    if(!runAllActive) {
+
+                    if (!runAllActive) {
                         arrayVisualizer.setCategory("Run Quick Sorts");
                         arrayVisualizer.setHeading("Done");
                     }
-                    
+
                     arrayManager.toggleMutableLength(true);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     JErrorPane.invokeErrorMessage(e);
                 }
                 Sounds.toggleSound(false);
