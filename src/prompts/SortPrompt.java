@@ -4,19 +4,25 @@
  */
 package prompts;
 
-import java.awt.event.ActionListener;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.rmi.CORBA.Util;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ProgressMonitor;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -24,9 +30,23 @@ import dialogs.ImportSortDialog;
 import frames.AppFrame;
 import frames.UtilFrame;
 import main.ArrayVisualizer;
-import main.SortAnalyzer.SortPair;
+import main.SortAnalyzer;
+import main.SortAnalyzer.SortInfo;
 import panes.JErrorPane;
-import threads.*;
+import threads.MultipleSortThread;
+import threads.RunAllSorts;
+import threads.RunComparisonSort;
+import threads.RunConcurrentSorts;
+import threads.RunDistributionSort;
+import threads.RunDistributionSorts;
+import threads.RunExchangeSorts;
+import threads.RunHybridSorts;
+import threads.RunImpracticalSorts;
+import threads.RunInsertionSorts;
+import threads.RunMergeSorts;
+import threads.RunMiscellaneousSorts;
+import threads.RunQuickSorts;
+import threads.RunSelectionSorts;
 
 /*
  *
@@ -60,7 +80,6 @@ SOFTWARE.
  */
 
 final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
-
     public class PlaceholderTextField extends JTextField {
         /**
          * Shamelessly copied from https://stackoverflow.com/a/16229082/8840278
@@ -95,6 +114,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
     }
 
     private static int lastCategory = -1;
+    private static boolean showExtraSorts = true;
 
     private static final long serialVersionUID = 1L;
 
@@ -165,7 +185,7 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jComboBox1.setModel(new DefaultComboBoxModel<>(SortPair.getCategories(ArrayVisualizer.getAllSorts())));
+        jComboBox1.setModel(new DefaultComboBoxModel<>(SortInfo.getCategories(ArrayVisualizer.getAllSorts())));
         jComboBox1.insertItemAt("All Sorts", 0);
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -237,49 +257,107 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         });
 
+        JPanel extraSortsManagementPanel = new JPanel();
+        JButton installExtraSortPackButton = new JButton(
+            ArrayVisualizer.getSortAnalyzer().extraSortsInstalled() ?
+                "Update Extra Sorts Pack" :
+                "Install Extra Sorts Pack"
+        );
+        installExtraSortPackButton.addActionListener(e -> {
+            UtilFrame.jButton1ResetText();
+            UtilFrame.jButton1Disable();
+            dispose();
+            new Thread(() -> {
+                ProgressMonitor installProgress = new ProgressMonitor(
+                    ArrayVisualizer.getMainWindow(),
+                    "Installing...",
+                    "Installing...",
+                    0, 1
+                );
+                installProgress.setMillisToDecideToPopup(500);
+                installProgress.setMillisToPopup(500);
+                SortAnalyzer analyzer = ArrayVisualizer.getSortAnalyzer();
+                boolean success;
+                try {
+                    analyzer.installOrUpdateExtraSorts(installProgress);
+                    success = true;
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    JErrorPane.invokeCustomErrorMessage("Failed to install: " + e1.getMessage());
+                    JErrorPane.invokeErrorMessage(e1, "Install Extra Sorts Pack");
+                    success = false;
+                }
+                installProgress.close();
+                UtilFrame.jButton1Enable();
+                if (success) {
+                    analyzer.unloadAllExtraSorts();
+                    analyzer.analyzeSortsExtrasOnly();
+                    ArrayVisualizer.refreshSorts();
+                    JOptionPane.showMessageDialog(
+                        ArrayVisualizer.getMainWindow(),
+                        "Successfully installed and loaded extra sorts pack!",
+                        "Install Extra Sorts Pack",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+            }, "ExtraSortsInstall").start();
+        });
+        extraSortsManagementPanel.add(installExtraSortPackButton);
+        if (ArrayVisualizer.getSortAnalyzer().extraSortsInstalled()) {
+            JCheckBox showExtraSorts = new JCheckBox("Show Extra Sorts");
+            showExtraSorts.setSelected(SortPrompt.showExtraSorts);
+            showExtraSorts.addActionListener(e -> {
+                SortPrompt.showExtraSorts = showExtraSorts.isSelected();
+                loadSorts();
+            });
+            extraSortsManagementPanel.add(showExtraSorts);
+        }
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(25, 25, 25)
-                    .addComponent(this.jComboBox1)
-                    .addGap(25, 25, 25))
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(45, 45, 45)
-                    .addComponent(this.jTextField1)
-                    .addGap(45, 45, 45))
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(25, 25, 25)
-                    .addComponent(this.jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(25, 25, 25))
-                .addGroup(javax.swing.GroupLayout.Alignment.CENTER, layout.createSequentialGroup()
-                    .addComponent(this.jButton3))
-                .addGroup(javax.swing.GroupLayout.Alignment.CENTER, layout.createSequentialGroup()
-                    .addComponent(this.jButton1))
-                .addGroup(javax.swing.GroupLayout.Alignment.CENTER, layout.createSequentialGroup()
-                    .addComponent(this.jButton2))
-                );
+            layout.createParallelGroup(Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(25, 25, 25)
+                .addComponent(this.jComboBox1)
+                .addGap(25, 25, 25))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(45, 45, 45)
+                .addComponent(this.jTextField1)
+                .addGap(45, 45, 45))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(25, 25, 25)
+                .addComponent(this.jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(25, 25, 25))
+            .addGroup(Alignment.CENTER, layout.createSequentialGroup()
+                .addComponent(this.jButton3))
+            .addGroup(Alignment.CENTER, layout.createSequentialGroup()
+                .addComponent(this.jButton1))
+            .addGroup(Alignment.CENTER, layout.createSequentialGroup()
+                .addComponent(extraSortsManagementPanel))
+            .addGroup(Alignment.CENTER, layout.createSequentialGroup()
+                .addComponent(this.jButton2))
+            );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(this.jComboBox1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(this.jTextField1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(this.jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(this.jButton3)
-                        .addGap(5, 5, 5)
-                        .addComponent(this.jButton1)
-                        .addGap(5, 5, 5)
-                        .addComponent(this.jButton2)
-                        .addGap(5, 5, 5))
-                );
+            layout.createParallelGroup(Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(this.jComboBox1))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(this.jTextField1))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addGroup(layout.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(this.jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(this.jButton3)
+                    .addGap(5, 5, 5)
+                    .addComponent(this.jButton1)
+                    .addComponent(extraSortsManagementPanel)
+                    .addComponent(this.jButton2)
+                    .addGap(5, 5, 5))
+            );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -327,14 +405,14 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
     private void jList1ValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jList1ValueChanged
         @SuppressWarnings("rawtypes")
         String sortName = (String)((JList)evt.getSource()).getSelectedValue();
-        SortPair sortNotFinal = new SortPair();
-        for (SortPair sort : ArrayVisualizer.getAllSorts()) {
+        SortInfo sortNotFinal = null;
+        for (SortInfo sort : ArrayVisualizer.getAllSorts()) {
             if (sort.listName.equals(sortName)) {
                 sortNotFinal = sort;
                 break;
             }
         }
-        final SortPair selection = sortNotFinal;
+        final SortInfo selection = sortNotFinal;
         UtilFrame.setSelection(selection);
         new Thread("SortingThread") {
             @Override
@@ -359,11 +437,13 @@ final public class SortPrompt extends javax.swing.JFrame implements AppFrame {
         int index = jComboBox1.getSelectedIndex();
         String category = (String)jComboBox1.getSelectedItem();
         ArrayList<String> sorts = new ArrayList<>();
-        for (SortPair sort : ArrayVisualizer.getAllSorts()) {
+        SortAnalyzer analyzer = ArrayVisualizer.getSortAnalyzer();
+        String searchTerms = jTextField1.getText().toLowerCase();
+        boolean isSearching = !searchTerms.isEmpty();
+        for (SortInfo sort : ArrayVisualizer.getAllSorts()) {
             if (index == 0 || sort.category.equals(category)) {
-                if (jTextField1.getText().length() > 0 &&
-                    !sort.listName.toLowerCase().contains(jTextField1.getText().toLowerCase()))
-                    continue;
+                if (!showExtraSorts && analyzer.didSortComeFromExtra(sort.sortClass)) continue;
+                if (isSearching && !sort.listName.toLowerCase().contains(searchTerms)) continue;
                 sorts.add(sort.listName);
             }
         }
