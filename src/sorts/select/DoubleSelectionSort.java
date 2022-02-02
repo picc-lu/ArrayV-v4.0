@@ -61,13 +61,16 @@ final public class DoubleSelectionSort extends Sort {
                     Highlights.markArray(1, biggest);
                     Delays.sleep(0.01);
                 }
-                if(Reads.compareValues(array[i], array[smallest]) == -1) {
+                else if(Reads.compareValues(array[i], array[smallest]) == -1) {
                     smallest = i;
                     Highlights.markArray(2, smallest);
                     Delays.sleep(0.01);
                 }
                 
                 Delays.sleep(0.01);
+            }
+            if (Reads.compareValues(array[biggest], array[smallest]) == 0) {
+                break;
             }
             if(biggest == left)
                 biggest = smallest;
