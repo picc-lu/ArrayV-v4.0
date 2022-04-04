@@ -1,9 +1,10 @@
 *.class
-bin
-dist
+target
 __pycache__
 cache
 antiqsort_*
 network_*.svg
 sorting_networks
-src/buildInfo.properties
+/stats-config.txt
+dependency-reduced-pom.xml
+/scripts

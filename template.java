@@ -1,9 +1,9 @@
 package sorts.category;
 
-import main.ArrayVisualizer;
-import sorts.templates.Sort;
+import io.github.arrayv.main.ArrayVisualizer;
+import io.github.arrayv.sorts.templates.Sort;
 
-final public class MySort extends Sort {
+public final class MySort extends Sort {
     public MySort(ArrayVisualizer arrayVisualizer) {
         super(arrayVisualizer);
 
@@ -11,7 +11,6 @@ final public class MySort extends Sort {
         this.setRunAllSortsName("My Sort");
         this.setRunSortName("Mysort");
         this.setCategory("Category Sorts");
-        this.setComparisonBased(true);
         this.setBucketSort(false);
         this.setRadixSort(false);
         this.setUnreasonablySlow(false);
