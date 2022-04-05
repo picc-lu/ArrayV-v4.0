@@ -48,7 +48,7 @@ public final class RotationTest extends Sort {
 
     @Override
     public void runSort(int[] array, int length, int bucketCount) {
-        int blockSize = (int)(length / BLOCK_DIV);
+        int blockSize = (int) (length / BLOCK_DIV);
 
         for (int i = 0; i < blockSize; i++) {
             Writes.write(array, i, i + length - blockSize, 0.05, false, false);

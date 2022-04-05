@@ -1,6 +1,8 @@
 package io.github.arrayv.frames;
 
 import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -12,10 +14,13 @@ import javax.swing.JOptionPane;
 import io.github.arrayv.dialogs.RunScriptDialog;
 import io.github.arrayv.main.ArrayManager;
 import io.github.arrayv.main.ArrayVisualizer;
+import io.github.arrayv.main.RunSort;
+import io.github.arrayv.main.SortAnalyzer;
 import io.github.arrayv.panes.JErrorPane;
 import io.github.arrayv.prompts.ShufflePrompt;
 import io.github.arrayv.prompts.SortPrompt;
 import io.github.arrayv.prompts.ViewPrompt;
+import io.github.arrayv.sortdata.SortInfo;
 import io.github.arrayv.utils.Delays;
 import io.github.arrayv.utils.Highlights;
 import io.github.arrayv.utils.Sounds;
@@ -65,7 +70,7 @@ public final class UtilFrame extends javax.swing.JFrame {
 
     private AppFrame abstractFrame;
 
-    private SortAnalyzer.SortPair selection;
+    private SortInfo selection;
 
     public UtilFrame(int[] array, ArrayVisualizer arrayVisualizer) {
         this.array = array;
@@ -172,7 +177,7 @@ public final class UtilFrame extends javax.swing.JFrame {
         jButton8.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                jButton8.setToolTipText(getSelectionSortName());
+//                jButton8.setToolTipText(getSelectionSortName());
             }
         });
 
@@ -386,12 +391,12 @@ public final class UtilFrame extends javax.swing.JFrame {
         this.jComboBox1.setSelectedItem(mode);
     }
 
-    public void setSelection(SortAnalyzer.SortPair selection) {
+    public void setSelection(SortInfo selection) {
         this.selection = selection;
     }
 
     public String getSelectionSortName() {
-        return this.selection == null ? "" : this.selection.listName;
+        return this.selection == null ? "" : this.selection.getListName();
     }
 
     private void jButton1ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
@@ -501,13 +506,8 @@ public final class UtilFrame extends javax.swing.JFrame {
         new Thread() {
             @Override
             public void run() {
-                if (selection.usesComparisons) {
-                    RunComparisonSort sortThread = new RunComparisonSort(ArrayVisualizer);
-                    sortThread.ReportComparativeSort(array, selection.id);
-                } else {
-                    RunDistributionSort sortThread = new RunDistributionSort(ArrayVisualizer);
-                    sortThread.ReportDistributionSort(array, selection.id);
-                }
+                RunSort sortThread = new RunSort(arrayVisualizer);
+                sortThread.runSort(array, selection.getId());
             }
         }.start();
     }//GEN-LAST:event_jButton8ActionPerformed

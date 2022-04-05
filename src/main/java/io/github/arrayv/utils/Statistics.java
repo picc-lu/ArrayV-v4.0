@@ -2,6 +2,9 @@ package io.github.arrayv.utils;
 
 import io.github.arrayv.main.ArrayVisualizer;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+
 public final class Statistics {
     private long frameTimeMillis;
 
@@ -86,8 +89,8 @@ public final class Statistics {
 
         this.readWriteRatio = "ReadWriteRatio: ";
         this.totalCost = "TotalCost: ";
-        long writesLong = ArrayVisualizer.getWrites().getWritesLong();
-        BigDecimal c = BigDecimal.valueOf(ArrayVisualizer.getReads().getComparisons());
+        long writesLong = arrayVisualizer.getWrites().getWritesLong();
+        BigDecimal c = BigDecimal.valueOf(arrayVisualizer.getReads().getComparisons());
         BigDecimal w = BigDecimal.valueOf(writesLong);
         if (writesLong == 0L) {
             this.readWriteRatio += "0.0 : 1";

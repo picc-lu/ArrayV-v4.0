@@ -1,6 +1,5 @@
 package io.github.arrayv.utils;
 
-import main.ArrayVisualizer;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -86,8 +85,8 @@ public final class Reads {
 
     public int compareValues(int left, int right) {
         if (arrayVisualizer.sortCanceled()) throw new StopSort();
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         this.comparisons++;
 
         if (arrayVisualizer.doingStabilityCheck()) {
@@ -117,8 +116,8 @@ public final class Reads {
 
     public int compareOriginalValues(int left, int right) {
         if (arrayVisualizer.sortCanceled()) throw new StopSort();
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         this.comparisons++;
 
         int cmpVal = 0;
@@ -135,8 +134,8 @@ public final class Reads {
     }
 
     public int compareIndices(int[] array, int left, int right, double sleep, boolean mark) {
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         if (mark) {
             Highlights.markArray(1, left);
             Highlights.markArray(2, right);
@@ -150,8 +149,8 @@ public final class Reads {
     }
 
     public int compareOriginalIndices(int[] array, int left, int right, double sleep, boolean mark) {
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         if (mark) {
             Highlights.markArray(1, left);
             Highlights.markArray(2, right);
@@ -161,8 +160,8 @@ public final class Reads {
     }
 
     public int compareIndexValue(int[] array, int index, int value, double sleep, boolean mark) {
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         if (mark) {
             Highlights.markArray(1, index);
             Delays.sleep(sleep);
@@ -179,8 +178,8 @@ public final class Reads {
     }
 
     public int compareValueIndex(int[] array, int value, int index, double sleep, boolean mark) {
-        ArrayVisualizer.setAction("COMPARING...");
-        ArrayVisualizer.setDetailAction("");
+        arrayVisualizer.setAction("COMPARING...");
+        arrayVisualizer.setDetailAction("");
         if (mark) {
             Highlights.markArray(1, index);
             Delays.sleep(sleep);

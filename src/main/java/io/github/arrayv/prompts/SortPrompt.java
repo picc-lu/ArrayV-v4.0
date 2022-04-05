@@ -375,7 +375,7 @@ public final class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         }
         final SortInfo selection = sortNotFinal;
-        UtilFrame.setSelection(selection);
+        utilFrame.setSelection(selection);
         new Thread("SortingThread") {
             @Override
             public void run() {
@@ -384,8 +384,8 @@ public final class SortPrompt extends javax.swing.JFrame implements AppFrame {
             }
         }.start();
         utilFrame.jButton1ResetText();
-        UtilFrame.jButton8SetSortName();
-        UtilFrame.jButton8Enabled();
+        utilFrame.jButton8SetSortName();
+        utilFrame.jButton8Enabled();
         dispose();
     }//GEN-LAST:event_jList1ValueChanged
 
